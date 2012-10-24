@@ -1,0 +1,181 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>Knockout Demo by Byron Sommardahl</title>
+
+        <script src='@Url.Content("~/Scripts/knockout-2.1.0.js")'> </script>
+        <script src='@Url.Content("~/Scripts/jquery-1.8.2.min.js")'> </script>
+        <script src='@Url.Content("~/Scripts/jquery-ui-1.8.22.min.js")'> </script>        
+        <script src='@Url.Content("~/Scripts/bootstrap.min.js")'> </script>
+        <script src='@Url.Content("~/Scripts/toastr.js")'> </script>
+        <script src='@Url.Content("~/Scripts/ko.extenders.numeric.js")'></script>
+
+        <link href='@Url.Content("~/Content/bootstrap.css")' rel="stylesheet" />
+        <link href='@Url.Content("~/Content/jquery-ui-1.8.16.custom.css")' rel="stylesheet" />
+        <link href='@Url.Content("~/Content/toastr.css")' rel="stylesheet" />
+        <link href='@Url.Content("~/Content/main.css")' rel="stylesheet" />
+        
+    </head>
+
+    <body>
+        <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                    <a class="brand" href="#">Cafe El Gringo</a>
+                    <div class="nav-collapse collapse">
+                        <ul class="nav">
+                            <li class="active"><a href="#">Home</a></li>
+                            <li><a href="#about">About</a></li>
+                            <li><a href="#contact">Contact</a></li>              
+                        </ul>
+                        
+                        <div class="navbar-form pull-right">
+                            <div>
+                                <input class="span2" type="text" placeholder="Email"/>
+                                <input class="span2" type="password" placeholder="Password"/>
+                                <button type="submit" class="btn">Sign in</button>
+                            </div>                            
+                        </div>
+                    </div><!--/.nav-collapse -->
+                </div>
+            </div>
+        </div>
+        
+        <!--NOTE: Here, we start with a div with an id of "productsView". We'll use the id later to do data-binding.-->
+        <div class="container" id="productsView">
+            
+            <div class="hero-unit">
+                <h1>Cafe el Gringo</h1>
+                <p>This small application demonstrates the power of the MVVM pattern in javascript using Knockout.JS. 
+                    Here, we will see how a simple product control panel could work using Knockout!</p>
+                <p><a href="http://knockoutjs.com/" class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+            </div>                        
+            
+        <!--NOTE: Here's our first data-bound html element. Notice "data-bind"... we are setting the "html" inside the span with the value of "ProductCount".
+            ProductCount is a property or function on our viewModel, which you will see below. -->
+            <h3><span data-bind="html: ProductCount"></span> Products</h3>            
+                
+            <!--NOTE: Here, we are going to iterate the "Products" array and, for each product, we will repeat the html inside this div.-->
+            <div class="row" data-bind="foreach: Products">
+                
+                <!--NOTE: Now that we are inside the foreach loop, we are nolonger dealing with the productListViewModel, but the productViewModel-->
+
+                <div class="span4">
+                    <!--NOTE: This H2 html will receive the value of the "Name" of the current product.-->
+                    <h2 data-bind="html: Name"></h2>
+                    <!-- ... and so on ... many different data-bindings that we can apply. The "attr" data-binding allows us to set the 
+                        different attributes of an html element. -->
+                    <img data-bind="attr: { src : ImageUrl, alt: Name }" class="product-image"/>
+                    <div class="row">
+                        <div class="span1">
+                            <label class="small-label">Price</label>
+                            <span data-bind="html: Price"></span>                            
+                        </div>
+                            
+                        <div class="span1">
+                            <label class="small-label">Quantity</label>
+                            <span data-bind="html: Quantity"></span>                            
+                        </div>
+
+                        <div class="span1">
+                            <label class="small-label">Sold</label>
+                            <span data-bind="html: Sold"></span>                             
+                        </div>
+                    </div>                        
+                <!--NOTE: And that's the end of the loop. Now, we'll go back and do it all over again 
+                    until there are no more products.-->
+                </div>
+                
+            </div>
+            <hr/>
+
+            <footer>
+                <p>Copyright &copy; Cafe El Gringo 2012</p>
+            </footer>
+
+        </div> <!-- /container -->
+        
+        
+
+        <script type="text/javascript">
+
+            //this is the code that runs upon page-load
+            $(document).ready(function () {                
+                setupProductView();
+            });
+
+            var setupProductView = function() {
+                //the domElement is the html dom container to which we will be binding
+                var domElement = $("#productsView")[0];
+
+                //the viewModel is what we will be binding to the domElement                                
+                var viewModel = new ProductsListViewModel();
+
+                //finally, combine the two... bind the viewModel to the domElement
+                ko.applyBindings(viewModel, domElement);                
+            };
+
+            var ProductsListViewModel = function() {
+
+                //NOTE: "ko.observableArray" is a function provided by the Knockout framework that gives us 
+                //an array of observable objects. If an item is added to or removed from this list, the view
+                //will be notified of the change.
+                var products = ko.observableArray();
+                
+                //NOTE: "ko.computed" is a function provided by the Knockout framework that allows you to 
+                //do calculations based on observable values.
+                var productCount = ko.computed(function() {
+                    return products().length;
+                });
+
+                //NOTE: Here, we're going to get a list of products from the server.
+                //In this case, I'm using Nancy. You can use any server tech to provide access to database
+                //items and server functionality. I'm only using this here to remind you that there
+                //should be some sort of server API backing your SPA.
+                $.ajax({
+                    url: "api/products",
+                    success: function(productsResponse) {
+                        $.each(productsResponse, function (index, product) {
+                            products.push(new ProductViewModel(product));
+                        });                        
+                    }
+                });
+
+                //these are our publicly accessible properties
+                return {
+                    Products: products,
+                    ProductCount: productCount                    
+                };
+            };
+            
+            var ProductViewModel = function (product) {
+
+                //NOTE: "ko.observable" is a function provided by the Knockout framework that gives us an observable property.
+                //If the value of this observable changes, the places in the view that use this property will also change.
+                var name = ko.observable(product.Name);
+                var price = ko.observable(product.Price);
+                var cost = ko.observable(product.Cost);
+                var quantity = ko.observable(product.Quantity);
+                var sold = ko.observable(0);
+
+                return {
+                    Id: product.Id,
+                    Name: name,
+                    Price: price,
+                    Cost: cost,
+                    ImageUrl: product.ImageUrl,
+
+                    Quantity: quantity,
+                    Sold: sold
+                };
+            };
+
+
+        </script>
+    </body>
+</html>

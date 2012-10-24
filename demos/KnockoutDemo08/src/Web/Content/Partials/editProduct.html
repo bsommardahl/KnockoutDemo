@@ -1,0 +1,53 @@
+﻿<div class="row">
+    <div class="span4">
+        <div class="controls">
+            <label class="control-label" for="inputEmail">Name</label>
+            <div class="controls">
+                <input type="text" id="inputEmail" placeholder="Name" data-bind="value: Name">
+            </div>
+        </div>
+    
+        <div class="row">
+            <span class="span1">
+                <label class="" for="inputPrice">Price</label>
+                <input type="text" id="inputPrice" placeholder="Price" class="span1" data-bind="value: Price"/>
+            </span>
+
+            <span class="span1">
+                <label class="" for="inputCost">Cost</label>
+                <input type="text" id="inputCost" placeholder="Cost"  class="span1" data-bind="value: Cost"/>
+            </span>
+                        
+        </div>
+        
+        <div class="row">
+            <span class="span1">
+                <label class="" for="displayItemProfit">Profit/Item</label>
+                <span class="span1" data-bind="html: ProfitPerItem"></span>
+            </span>
+            
+            <span class="span1">
+                <label class="" >Quantity</label>
+                <span class="span1" data-bind="html: Quantity"></span>
+            </span>    
+
+            <span class="span2">
+                <label class="" >Total Profit</label>
+                <span class="span1" data-bind="html: ProfitForQuantity"></span>
+            </span>    
+        </div>
+        <br />
+        <div class="control-group">
+            <div class="controls">
+                <button class="btn btn-primary" data-bind="click: Save">Save</button>     
+                <!--NOTE: I added an "enable" data-binding so that the button is only enabled if we "canRemove"-->
+                <!--"canRemove" maps to the same function on the viewModel-->
+                <button class="btn btn-danger" data-bind="click: Remove, enable: CanRemove">Remove</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="span2">        
+        <img data-bind="attr: { src : ImageUrl, alt: Name }" />
+    </div>
+</div>

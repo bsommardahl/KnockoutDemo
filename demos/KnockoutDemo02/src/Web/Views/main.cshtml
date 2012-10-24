@@ -1,0 +1,211 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>Knockout Demo by Byron Sommardahl</title>
+
+        <script src='@Url.Content("~/Scripts/knockout-2.1.0.js")'> </script>
+        <script src='@Url.Content("~/Scripts/jquery-1.8.2.min.js")'> </script>
+        <script src='@Url.Content("~/Scripts/jquery-ui-1.8.22.min.js")'> </script>        
+        <script src='@Url.Content("~/Scripts/bootstrap.min.js")'> </script>
+        <script src='@Url.Content("~/Scripts/toastr.js")'> </script>
+        <script src='@Url.Content("~/Scripts/ko.extenders.numeric.js")'></script>
+
+        <link href='@Url.Content("~/Content/bootstrap.css")' rel="stylesheet" />
+        <link href='@Url.Content("~/Content/jquery-ui-1.8.16.custom.css")' rel="stylesheet" />
+        <link href='@Url.Content("~/Content/toastr.css")' rel="stylesheet" />
+        <link href='@Url.Content("~/Content/main.css")' rel="stylesheet" />
+        
+    </head>
+
+    <body>
+        <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                    <a class="brand" href="#">Cafe El Gringo</a>
+                    <div class="nav-collapse collapse">
+                        <ul class="nav">
+                            <li class="active"><a href="#">Home</a></li>
+                            <li><a href="#about">About</a></li>
+                            <li><a href="#contact">Contact</a></li>              
+                        </ul>
+                        
+                        <div class="navbar-form pull-right">
+                            <div>
+                                <input class="span2" type="text" placeholder="Email"/>
+                                <input class="span2" type="password" placeholder="Password"/>
+                                <button type="submit" class="btn">Sign in</button>
+                            </div>                            
+                        </div>
+                    </div><!--/.nav-collapse -->
+                </div>
+            </div>
+        </div>
+
+        <div class="container" id="productsView">
+            
+            <div class="hero-unit">
+                <h1>Cafe el Gringo</h1>
+                <p>This small application demonstrates the power of the MVVM pattern in javascript using Knockout.JS. 
+                    Here, we will see how a simple product control panel could work using Knockout!</p>
+                <p><a href="http://knockoutjs.com/" class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+            </div>                        
+            
+            <!--NOTE: Here's where we will place a div that we will use for some stats for our store.-->
+            <div id="cashStats">
+                <div>
+                    <label class="small-label">Venta:</label>                    
+                    L<span data-bind="html: TotalCredit"></span>
+                </div>    
+                <div>
+                    <label class="small-label">Ganancia:</label>
+                    L<span data-bind="html: TotalProfit"></span>
+                </div>
+                <div>
+                    <label class="small-label">Efectivo Disponible:</label>
+                    L<span data-bind="html: TotalCash"></span>
+                </div>    
+                <div>
+                    <label class="small-label">Inversion:</label>
+                    L<span data-bind="html: TotalDebit"></span>
+                </div>                        
+            </div>
+            
+            <h3><span data-bind="html: ProductCount"></span> Products</h3>            
+                
+            <div class="row" data-bind="foreach: Products">
+                <div class="span4">
+                    <h2 data-bind="html: Name"></h2>
+                    <img data-bind="attr: { src : ImageUrl, alt: Name }" class="product-image"/>
+                    <div class="row">
+                        <div class="span1">
+                            <label class="small-label">Price</label>
+                            <span data-bind="html: Price"></span>                            
+                        </div>
+                            
+                        <div class="span1">
+                            <label class="small-label">Quantity</label>
+                            <span data-bind="html: Quantity"></span>                            
+                        </div>
+
+                        <div class="span1">
+                            <label class="small-label">Sold</label>
+                            <span data-bind="html: Sold"></span>                             
+                        </div>
+                    </div>                        
+                </div>
+                
+            </div>
+            <hr/>
+
+            <footer>
+                <p>Copyright &copy; Cafe El Gringo 2012</p>
+            </footer>
+
+        </div> <!-- /container -->
+        
+        
+
+        <script type="text/javascript">
+
+            //this is the code that runs upon page-load
+            $(document).ready(function() {
+                setupProductView();
+            });
+
+            var setupProductView = function() {
+                //the domElement is the html dom container to which we will be binding
+                var domElement = $("#productsView")[0];
+
+                //the viewModel is what we will be binding to the domElement                                
+                var viewModel = new ProductsListViewModel(toastr);
+
+                //finally, combine the two... bind the viewModel to the domElement
+                ko.applyBindings(viewModel, domElement);
+
+                //NOTE: Here, we're going to drop some code that will wrap the stats div in a dialog box (using jQuery).
+                //open up a dialog upon login to display cash stats
+                var dialogWidth = 70;
+                var dialogHeight = 270;
+                var x = window.screen.availWidth - dialogWidth;
+                var y = window.screen.availHeight - dialogHeight;
+
+                $("#cashStats").dialog({ sticky: true, title: "Cash Stats", dialogClass: "flora", height: dialogHeight, width: dialogWidth })
+                    .dialog('option', 'position', [x, y]);
+
+                $('.flora.ui-dialog').css({ position: "fixed" });
+                
+            };
+
+            var ProductViewModel = function(product) {
+
+                var name = ko.observable(product.Name);
+                var price = ko.observable(product.Price);
+                var cost = ko.observable(product.Cost);
+                var quantity = ko.observable(product.Quantity);
+                var sold = ko.observable(0);
+
+                return {
+                    Id: product.Id,
+                    Name: name,
+                    Price: price,
+                    Cost: cost,
+                    ImageUrl: product.ImageUrl,
+
+                    Quantity: quantity,
+                    Sold: sold
+                };
+            };
+
+            var ProductsListViewModel = function(toastr) {
+
+                //these are our private fields
+                var products = ko.observableArray();
+                //NOTE: We're adding some observables here to hold the values for our stats.
+                var totalCash = ko.observable(0);
+                var totalProfit = ko.observable(0);
+                var totalDebit = ko.observable(0);
+                var totalCredit = ko.observable(0);
+
+                var productCount = ko.computed(function() {
+                    return products().length;
+                });
+
+                //get products from the json api
+                $.ajax({
+                    url: "api/products",
+                    success: function(productsResponse) {
+                        $.each(productsResponse, function (index, product) {
+                            products.push(new ProductViewModel(product, totalCash, toastr));
+                        });
+                        //NOTE: We want to set the initial inversion based on the products that get added from the server.
+                        setInitialDebit();
+                    }
+                });
+
+                //NOTE: Here's the function that sets the initial debits.
+                var setInitialDebit = function() {
+                    var total = 0;
+                    $.each(products(), function(index, product) {
+                        total = total + (product.Quantity() * product.Cost());
+                    });
+                    totalDebit(total);
+                };
+
+                //these are our publicly accessible properties
+                return {
+                    Products: products,
+                    ProductCount: productCount,                                       
+                    TotalCredit: totalCredit,
+                    TotalDebit: totalDebit,
+                    TotalCash: totalCash,
+                    TotalProfit: totalProfit                    
+                };
+            };                     
+        </script>
+    </body>
+</html>
